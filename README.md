@@ -241,6 +241,7 @@ Important settings:
 - Point expiry: `loyalty.points-expire-after-months: 12`
 - Schema initialization: `src/main/resources/schema.sql`
 - Logging: console output plus rolling files under `logs/loyalty-points.log`
+- Tracing: Micrometer Tracing with the Brave bridge generates `traceId` and `spanId` for sampled requests and includes them in console and file logs
 
 ## Error handling
 

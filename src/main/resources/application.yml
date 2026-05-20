@@ -36,6 +36,9 @@ management:
     health:
       probes:
         enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
 
 loyalty:
   points-expire-after-months: 12
