@@ -4,3 +4,6 @@ out/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 logs/
+
+.idea/
+*.iml
