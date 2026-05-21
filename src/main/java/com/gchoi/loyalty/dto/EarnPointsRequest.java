@@ -13,7 +13,7 @@ import java.time.Instant;
 public record EarnPointsRequest(
         @NotBlank String customerId,
         @NotBlank String purchaseId,
-        @NotNull @DecimalMin(value = "1.00", message = "amount must be at least 1.00") BigDecimal amount,
+        @NotNull @DecimalMin(value = "0.01", message = "amount must be positive") BigDecimal amount,
         Instant purchasedAt
 ) {
 }

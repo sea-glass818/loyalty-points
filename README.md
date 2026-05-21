@@ -1,6 +1,6 @@
 # Loyalty Points System
 
-Spring Boot backend for a retail loyalty program. Customers can make purchases and earn points, check their current balance and tier, redeem points for rewards, receive purchase refunds, and rely on the system to exclude points after their 12-month expiry.
+Spring Boot backend for a retail loyalty program. Customers can make purchases and earn points, check their current balance and tier, redeem points for rewards, receive purchase refunds, and rely on the system to exclude points after the configured expiry window.
 
 ## Tech stack
 
@@ -63,7 +63,7 @@ Password:
 
 ### Earn points
 
-Creates the customer if they do not already exist, stores the purchase, and creates a points ledger entry. Points are awarded at 1 point per whole dollar spent and expire after 12 months.
+Creates the customer if they do not already exist, stores the purchase, and creates a points ledger entry when the purchase earns points. Points are awarded at 1 point per whole dollar spent and expire after `loyalty.points-expire-after-months`. A purchase under $1.00 is still valid and earns 0 points.
 
 ```sh
 curl -X POST http://localhost:8080/api/v1/purchases \
@@ -115,7 +115,7 @@ Example response:
 }
 ```
 
-Expired ledger entries are excluded from the available balance. Tier is based on non-refunded spend in the rolling 12 months:
+Expired ledger entries are excluded from the available balance. Tier is based on non-refunded spend over the same rolling month window configured by `loyalty.points-expire-after-months`:
 
 - Silver: below $1,000
 - Gold: $1,000 to $4,999.99
@@ -222,7 +222,7 @@ Represents points earned from a purchase and refund adjustments. Earn rows store
 
 Represents a purchase refund audit record. It stores the original earned points, the available points removed from the customer balance, any debt created because points had already been redeemed, and the refund timestamp.
 
-The explicit H2 schema is defined in [schema.sql](/Users/gchoi/dev/git/loyalty-points/src/main/resources/schema.sql). Spring initializes the database from this file and Hibernate validates that the JPA mappings match it. Indexes support customer lookup, rolling 12-month spend, FIFO redemption scans, purchase-ledger lookup, and refund history lookup.
+The explicit H2 schema is defined in [schema.sql](/Users/gchoi/dev/git/loyalty-points/src/main/resources/schema.sql). Spring initializes the database from this file and Hibernate validates that the JPA mappings match it. Indexes support customer lookup, rolling spend, FIFO redemption scans, purchase-ledger lookup, and refund history lookup.
 
 ## Simplifying assumptions
 
@@ -238,7 +238,7 @@ Important settings:
 - H2 in-memory datasource: `jdbc:h2:mem:loyaltydb`
 - H2 console: `/h2-console`
 - Actuator health endpoint: `/actuator/health`
-- Point expiry: `loyalty.points-expire-after-months: 12`
+- Point expiry and rolling tier window: `loyalty.points-expire-after-months: 12`
 - Schema initialization: `src/main/resources/schema.sql`
 - Logging: console output plus rolling files under `logs/loyalty-points.log`
 - Tracing: Micrometer Tracing with the Brave bridge generates `traceId` and `spanId` for sampled requests and includes them in console and file logs
@@ -262,7 +262,7 @@ This implementation covers the required core flows:
 - Make a purchase and earn points
 - Check current balance
 - Redeem points for a reward
-- Exclude points after 12 months
+- Exclude points after the configured expiry window
 - Return tier status with balance
 - Refund purchases and claw back points
 - Redeem points closest to expiry first

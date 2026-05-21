@@ -55,6 +55,7 @@ public class LoyaltyService {
 
     /**
      * Records a purchase and awards one point per whole dollar spent.
+     * Purchases under one dollar are valid and earn zero points.
      *
      * @param request purchase details
      * @return earning result
@@ -73,9 +74,6 @@ public class LoyaltyService {
 
         Instant purchasedAt = request.purchasedAt() == null ? Instant.now(clock) : request.purchasedAt();
         int pointsEarned = request.amount().setScale(0, RoundingMode.DOWN).intValueExact();
-        if (pointsEarned <= 0) {
-            throw new IllegalArgumentException("purchase must earn at least one point");
-        }
 
         Purchase purchase = purchaseRepository.save(Purchase.builder()
                 .purchaseId(request.purchaseId())
@@ -88,15 +86,17 @@ public class LoyaltyService {
                 .plusMonths(loyaltyProperties.getPointsExpireAfterMonths())
                 .toInstant();
 
-        pointsLedgerRepository.save(PointsLedger.builder()
-                .customer(customer)
-                .purchase(purchase)
-                .entryType(LedgerEntryType.EARN)
-                .points(pointsEarned)
-                .remainingPoints(pointsEarned)
-                .earnedAt(purchasedAt)
-                .expiresAt(expiresAt)
-                .build());
+        if (pointsEarned > 0) {
+            pointsLedgerRepository.save(PointsLedger.builder()
+                    .customer(customer)
+                    .purchase(purchase)
+                    .entryType(LedgerEntryType.EARN)
+                    .points(pointsEarned)
+                    .remainingPoints(pointsEarned)
+                    .earnedAt(purchasedAt)
+                    .expiresAt(expiresAt)
+                    .build());
+        }
 
         log.info("Awarded {} points to customer {} for purchase {}", pointsEarned, request.customerId(), request.purchaseId());
 
@@ -124,7 +124,9 @@ public class LoyaltyService {
         Long points = pointsLedgerRepository.sumAvailablePoints(customer, now);
         BigDecimal rollingSpend = purchaseRepository.sumNonRefundedSpendSince(
                 customerId,
-                now.atZone(ZoneOffset.UTC).minusMonths(12).toInstant()
+                now.atZone(ZoneOffset.UTC)
+                        .minusMonths(loyaltyProperties.getPointsExpireAfterMonths())
+                        .toInstant()
         );
         return new BalanceResponse(
                 customer.getExternalId(),

@@ -3,7 +3,7 @@ package com.gchoi.loyalty.entity;
 import java.math.BigDecimal;
 
 /**
- * Customer tier derived from non-refunded spend over the rolling 12-month window.
+ * Customer tier derived from non-refunded spend over the configured rolling window.
  */
 public enum Tier {
     SILVER,
@@ -13,7 +13,7 @@ public enum Tier {
     /**
      * Determines the loyalty tier for the provided rolling spend amount.
      *
-     * @param rollingSpend non-refunded spend in the rolling 12-month window
+     * @param rollingSpend non-refunded spend in the rolling tier window
      * @return tier matching the configured spend thresholds
      */
     public static Tier fromRollingSpend(BigDecimal rollingSpend) {
