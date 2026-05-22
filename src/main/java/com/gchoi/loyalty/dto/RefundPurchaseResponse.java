@@ -12,7 +12,7 @@ public record RefundPurchaseResponse(
         int earnedPoints,
         int removedAvailablePoints,
         int debtPoints,
-        int remainingBalance,
+        long remainingBalance,
         Instant refundedAt
 ) {
 }

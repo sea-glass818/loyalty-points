@@ -11,7 +11,7 @@ public record RedeemPointsResponse(
         String rewardId,
         String rewardName,
         int pointsSpent,
-        int remainingBalance,
+        long remainingBalance,
         Instant redeemedAt,
         List<RedemptionAllocationResponse> allocations
 ) {

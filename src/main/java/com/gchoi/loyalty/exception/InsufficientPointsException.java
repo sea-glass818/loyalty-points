@@ -10,7 +10,7 @@ public class InsufficientPointsException extends RuntimeException {
      * @param availablePoints currently available points
      * @param requiredPoints points required for the reward
      */
-    public InsufficientPointsException(int availablePoints, int requiredPoints) {
+    public InsufficientPointsException(long availablePoints, int requiredPoints) {
         super("Insufficient points: available=" + availablePoints + ", required=" + requiredPoints);
     }
 }

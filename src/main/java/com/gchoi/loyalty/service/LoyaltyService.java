@@ -121,7 +121,6 @@ public class LoyaltyService {
         Customer customer = customerRepository.findByExternalId(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
         Instant now = Instant.now(clock);
-        Long points = pointsLedgerRepository.sumAvailablePoints(customer, now);
         BigDecimal rollingSpend = purchaseRepository.sumNonRefundedSpendSince(
                 customerId,
                 now.atZone(ZoneOffset.UTC)
@@ -130,7 +129,7 @@ public class LoyaltyService {
         );
         return new BalanceResponse(
                 customer.getExternalId(),
-                Math.toIntExact(points == null ? 0 : points),
+                availablePoints(customer, now),
                 Tier.fromRollingSpend(rollingSpend)
         );
     }
@@ -148,7 +147,7 @@ public class LoyaltyService {
         RewardResponse reward = rewardCatalog.getReward(request.rewardId());
         Instant now = Instant.now(clock);
 
-        int availablePoints = Math.toIntExact(pointsLedgerRepository.sumAvailablePoints(customer, now));
+        long availablePoints = availablePoints(customer, now);
         if (availablePoints < reward.pointCost()) {
             throw new InsufficientPointsException(availablePoints, reward.pointCost());
         }
@@ -258,7 +257,7 @@ public class LoyaltyService {
                 .refundedAt(now)
                 .build());
 
-        int remainingBalance = Math.toIntExact(pointsLedgerRepository.sumAvailablePoints(purchase.getCustomer(), now));
+        long remainingBalance = availablePoints(purchase.getCustomer(), now);
         log.info("Refunded purchase {} for customer {}; clawed back {} points",
                 purchase.getPurchaseId(), purchase.getCustomer().getExternalId(), earnedPoints);
 
@@ -272,5 +271,17 @@ public class LoyaltyService {
                 remainingBalance,
                 now
         );
+    }
+
+    /**
+     * Returns the available unexpired point balance for a customer.
+     *
+     * @param customer customer whose balance is requested
+     * @param now current timestamp used for expiry filtering
+     * @return available point balance
+     */
+    private long availablePoints(Customer customer, Instant now) {
+        Long points = pointsLedgerRepository.sumAvailablePoints(customer, now);
+        return points == null ? 0L : points;
     }
 }
