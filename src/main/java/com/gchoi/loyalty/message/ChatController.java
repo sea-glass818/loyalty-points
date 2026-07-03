@@ -10,7 +10,7 @@ import java.time.Instant;
 public class ChatController {
 
   @Autowired
-  private KafkaTemplate<String,Object> kafkaTemplate;
+  private KafkaTemplate<String, Object> kafkaTemplate;
 
   @MessageMapping("/chat")
   public void handleMessage(ChatMessage message) {
