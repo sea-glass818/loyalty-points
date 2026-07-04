@@ -3,6 +3,9 @@ spring:
     name: loyalty-points-system
   kafka:
     bootstrap-servers: localhost:9092
+    consumer:
+      group-id: websocket-bridge
+      auto-offset-reset: earliest
   datasource:
     url: jdbc:h2:mem:loyaltydb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver

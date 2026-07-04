@@ -15,7 +15,10 @@ public class KafkaWebSocketBridge {
   @Autowired
   private SimpMessagingTemplate messagingTemplate;
 
-  @KafkaListener(topics = "chat-messages", groupId = "websocket-bridge")
+  @KafkaListener(
+      topics = "chat-messages",
+      groupId = "${spring.kafka.consumer.group-id}",
+      containerFactory = "objectKafkaListenerContainerFactory")
   public void handleChatMessage(ChatMessage message) {
     log.info("consumed from Kafka: {}", message);
     messagingTemplate.convertAndSend("/topic/messages", message);
